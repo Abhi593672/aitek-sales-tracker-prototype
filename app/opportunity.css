@@ -1,0 +1,15 @@
+.wideModal{width:min(1050px,97vw)}
+.formSection{display:flex;justify-content:space-between;gap:16px;background:#f4f6f9;border:1px solid var(--line);padding:12px;border-radius:7px}
+.formSection span{color:var(--muted)}
+.fieldError{display:block!important;color:#a51d18!important;margin-top:5px}
+.inlinePopup{position:sticky;bottom:0;background:#fff7e8;border:2px solid #a85f00;border-radius:8px;padding:14px;box-shadow:0 -8px 24px #0002}
+.inlinePopup button{border:1px solid var(--line);border-radius:6px;padding:8px 11px;background:#fff}
+.tabs{display:flex;gap:7px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tabs button{border:0;background:transparent;padding:10px 12px}
+.tabs button.activeTab{border-bottom:3px solid var(--red);color:var(--red);font-weight:bold}
+.detailGrid.expanded{grid-template-columns:repeat(3,1fr)}
+.detailGrid.expanded>div:last-child{grid-column:span 3}
+.detailGrid b{font-size:13px;margin-top:5px}
+.pageActions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:900px){.detailGrid.expanded{grid-template-columns:1fr 1fr}.detailGrid.expanded>div:last-child{grid-column:span 2}}
+@media(max-width:620px){.detailGrid.expanded{grid-template-columns:1fr}.detailGrid.expanded>div:last-child{grid-column:auto}.formSection{display:grid}}
