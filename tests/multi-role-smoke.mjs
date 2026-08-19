@@ -1,4 +1,5 @@
 const pages = await fetch("http://127.0.0.1:9223/json/list").then((r) => r.json());
+const baseUrl = process.env.TEST_BASE_URL || "http://localhost:3000/";
 const page = pages.find((item) => item.type === "page");
 if (!page) throw new Error("No browser page available for smoke testing");
 
@@ -33,7 +34,7 @@ async function waitFor(expression, message) {
   throw new Error(`${message}\n${(await evaluate("document.body.innerText")).slice(0, 2500)}`);
 }
 async function loadLogin() {
-  await command("Page.navigate", { url: "http://localhost:3000/" });
+  await command("Page.navigate", { url: baseUrl });
   await waitFor(`document.body.innerText.includes("Sign in")`, "Login did not load");
   await new Promise((resolve) => setTimeout(resolve, 350));
 }

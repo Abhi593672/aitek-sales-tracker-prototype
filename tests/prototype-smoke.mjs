@@ -1,4 +1,5 @@
 const pages = await fetch("http://127.0.0.1:9223/json/list").then((r) => r.json());
+const baseUrl = process.env.TEST_BASE_URL || "http://localhost:3000/";
 const page = pages.find((item) => item.type === "page");
 if (!page) throw new Error("No browser page available for smoke testing");
 
@@ -49,7 +50,7 @@ async function waitFor(expression, message) {
 
 await command("Page.enable");
 await command("Runtime.enable");
-await command("Page.navigate", { url: "http://localhost:3000/" });
+await command("Page.navigate", { url: baseUrl });
 await new Promise((resolve) => loaded.push(resolve));
 await waitFor(`document.body.innerText.includes("Sign in")`, "Login screen did not render");
 
