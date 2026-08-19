@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type Role = "KAM" | "IST" | "Desk Manager";
+type Role = "KAM" | "IST" | "Desk Manager" | "Regional Manager";
 type OpportunityTab = "Draft" | "Active" | "Won" | "Lost";
 type OpportunityRecord = {
   id: string;
@@ -24,7 +24,7 @@ type OpportunityRecord = {
   nextActionDate: string;
   nextActionDescription: string;
 };
-type Screen = "login" | "dashboard" | "resellers" | "reseller-detail" | "opportunities" | "create-opportunity" | "opportunity-detail" | "kam-requests" | "kam-request-detail" | "request-start" | "create-request" | "request-success" | "kam-quotations" | "kam-quotation-detail" | "revision-request" | "revision-success" | "kam-orders" | "kam-order-detail" | "activities" | "create-activity" | "reports" | "notifications" | "ist-pool" | "assigned" | "request-detail" | "quotation" | "published";
+type Screen = "login" | "dashboard" | "resellers" | "reseller-detail" | "opportunities" | "create-opportunity" | "opportunity-detail" | "kam-requests" | "kam-request-detail" | "request-start" | "create-request" | "request-success" | "kam-quotations" | "kam-quotation-detail" | "revision-request" | "revision-success" | "kam-orders" | "kam-order-detail" | "activities" | "create-activity" | "reports" | "notifications" | "ist-pool" | "assigned" | "request-detail" | "quotation" | "published" | "team-workload" | "sla-escalations" | "regional-pipeline";
 
 const sampleRequests = [
   {
@@ -32,7 +32,7 @@ const sampleRequests = [
     company: "Nexa Systems CI",
     endUser: "Orange Côte d’Ivoire",
     type: "Standard",
-    age: "00:34",
+    age: "00:12",
     status: "Unassigned",
     value: "€48,600",
   },
@@ -41,7 +41,7 @@ const sampleRequests = [
     company: "DataLink Sénégal",
     endUser: "Ecobank",
     type: "Complex",
-    age: "01:42",
+    age: "00:24",
     status: "Unassigned",
     value: "€91,250",
   },
@@ -50,7 +50,7 @@ const sampleRequests = [
     company: "TechBridge Ghana",
     endUser: "Ghana Ports",
     type: "Tender",
-    age: "02:11",
+    age: "00:34",
     status: "SLA breached",
     value: "€184,000",
   },
@@ -60,6 +60,7 @@ const navByRole: Record<Role, string[]> = {
   KAM: ["Dashboard", "My Resellers", "Opportunities", "Quote Requests", "Quotations", "Orders", "Activities", "Reports"],
   IST: ["Dashboard", "IST Pool", "My Assigned Requests", "Quotations", "Orders", "Activities"],
   "Desk Manager": ["Dashboard", "IST Pool", "Team Workload", "SLA Escalations", "Quotations", "Reports"],
+  "Regional Manager": ["Dashboard", "Regional Pipeline", "Opportunities", "Quotations", "Orders", "Reports"],
 };
 
 export default function Prototype() {
@@ -112,6 +113,9 @@ export default function Prototype() {
         "request-detail": "Quote Request QR-2026-01842",
         quotation: "Prepare Quotation",
         published: "Quotation Published",
+        "team-workload": "IST Team Workload",
+        "sla-escalations": "SLA Escalations",
+        "regional-pipeline": "Regional Pipeline",
         login: "Sign in",
       })[screen],
     [screen, role],
@@ -181,9 +185,9 @@ export default function Prototype() {
             <button className="iconbtn" aria-label="Open notifications" onClick={() => go("notifications")}>
               ♢<span>3</span>
             </button>
-            <div className="avatar">{role === "KAM" ? "AK" : role === "IST" ? "SI" : "DM"}</div>
+            <div className="avatar">{role === "KAM" ? "AK" : role === "IST" ? "SI" : role === "Desk Manager" ? "DM" : "KT"}</div>
             <div>
-              <strong>{role === "KAM" ? "Aminata Koné" : role === "IST" ? "Samuel Ibrahim" : "Mariam Diallo"}</strong>
+              <strong>{role === "KAM" ? "Aminata Koné" : role === "IST" ? "Samuel Ibrahim" : role === "Desk Manager" ? "Mariam Diallo" : "Koffi Traoré"}</strong>
               <small>{role}</small>
             </div>
           </div>
@@ -257,6 +261,9 @@ export default function Prototype() {
           )}
           {screen === "quotation" && <Quotation product={product} setProduct={setProduct} quantity={quantity} setQuantity={setQuantity} unitPrice={unitPrice} setUnitPrice={setUnitPrice} errors={errors} publish={publishQuote} />}
           {screen === "published" && <Published go={go} />}
+          {screen === "team-workload" && <DeskTeamWorkload notify={notify} />}
+          {screen === "sla-escalations" && <DeskSLAEscalations notify={notify} />}
+          {screen === "regional-pipeline" && <RegionalPipeline />}
         </main>
       </section>
       {toast && <div className="toast">✓ {toast}</div>}
@@ -297,7 +304,7 @@ export default function Prototype() {
       {modal === "pickup" && (
         <Modal title="Pick up Quote Request?" close={() => setModal("")}>
           <p>
-            You will become the Assigned IST Member for <strong>QR-2026-01842</strong>. The quotation SLA will begin immediately.
+            You will become the Assigned IST Member for <strong>QR-2026-01842</strong>. Pickup ownership will be recorded and the 30-minute pickup SLA will stop. The applicable execution SLA starts after classification.
           </p>
           <label className="check">
             <input type="checkbox" defaultChecked /> I understand ownership will be recorded in the audit trail.
@@ -362,6 +369,13 @@ export default function Prototype() {
 function Login({ onLogin }: { onLogin: (r: Role) => void }) {
   const [email, setEmail] = useState("aminata.kone@aitek.com");
   const [password, setPassword] = useState("password");
+  const [loginRole, setLoginRole] = useState<Role>("KAM");
+  const roleProfiles: Record<Role, { email: string; scope: string }> = {
+    KAM: { email: "aminata.kone@aitek.com", scope: "Assigned Strategic Resellers and owned Opportunities" },
+    IST: { email: "samuel.ibrahim@aitek.com", scope: "Central IST Pool and assigned Quote Requests" },
+    "Desk Manager": { email: "mariam.diallo@aitek.com", scope: "Central desk workload, SLA and reassignment" },
+    "Regional Manager": { email: "koffi.traore@aitek.com", scope: "Read-only regional pipeline and KAM performance" },
+  };
   return (
     <div className="login-page">
       <div className="login-brand">
@@ -382,11 +396,30 @@ function Login({ onLogin }: { onLogin: (r: Role) => void }) {
         className="login-card"
         onSubmit={(e) => {
           e.preventDefault();
-          onLogin("KAM");
+          onLogin(loginRole);
         }}
       >
         <h2>Sign in</h2>
         <p>Use your AITEK account to continue.</p>
+        <Field label="Portal role">
+          <select
+            value={loginRole}
+            onChange={(e) => {
+              const nextRole = e.target.value as Role;
+              setLoginRole(nextRole);
+              setEmail(roleProfiles[nextRole].email);
+            }}
+          >
+            <option>KAM</option>
+            <option>IST</option>
+            <option>Desk Manager</option>
+            <option>Regional Manager</option>
+          </select>
+        </Field>
+        <div className="assignment-banner">
+          <strong>Access scope</strong>
+          <span>{roleProfiles[loginRole].scope}</span>
+        </div>
         <Field label="Email address">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>
@@ -410,9 +443,10 @@ function Login({ onLogin }: { onLogin: (r: Role) => void }) {
 function Dashboard({ role, go }: { role: Role; go: (s: Screen) => void }) {
   const kam = role === "KAM";
   const ist = role === "IST";
+  const regional = role === "Regional Manager";
   return (
     <>
-      <PageHead title={`${role} Dashboard`} subtitle={kam ? "Strategic account pipeline and next actions" : ist ? "Operational request workload and SLA status" : "Team allocation, performance and escalations"} />
+      <PageHead title={`${role} Dashboard`} subtitle={kam ? "Strategic account pipeline and next actions" : ist ? "Operational request workload and SLA status" : regional ? "Regional pipeline, KAM performance and commercial risk" : "Team allocation, performance and escalations"} />
       {kam && (
         <div className="dashboard-actions">
           <button className="secondary" onClick={() => go("create-opportunity")}>
@@ -424,16 +458,16 @@ function Dashboard({ role, go }: { role: Role; go: (s: Screen) => void }) {
         </div>
       )}
       <div className="metrics">
-        <Metric label={kam ? "Open Opportunities" : "Unassigned Requests"} value={kam ? "18" : "12"} hint={kam ? "€1.42M pipeline" : "3 approaching SLA"} />
-        <Metric label={kam ? "Quotes in Progress" : "My Assigned"} value={kam ? "7" : "8"} hint={kam ? "2 awaiting response" : "2 due today"} />
+        <Metric label={kam || regional ? "Open Opportunities" : "Unassigned Requests"} value={kam ? "18" : regional ? "64" : "12"} hint={kam ? "€1.42M pipeline" : regional ? "€4.86M regional pipeline" : "3 approaching SLA"} />
+        <Metric label={kam || regional ? "Quotes in Progress" : "My Assigned"} value={kam ? "7" : regional ? "21" : "8"} hint={kam ? "2 awaiting response" : regional ? "Across 5 KAMs" : "2 due today"} />
         <Metric label="SLA Compliance" value={kam ? "94%" : "91%"} hint="Rolling 30 days" />
-        <Metric label={kam ? "Next Actions Due" : "Published This Month"} value={kam ? "5" : "34"} hint={kam ? "2 overdue" : "€486K quoted"} />
+        <Metric label={kam ? "Next Actions Due" : regional ? "At-risk Deals" : "Published This Month"} value={kam ? "5" : regional ? "9" : "34"} hint={kam ? "2 overdue" : regional ? "3 need management attention" : "€486K quoted"} />
       </div>
       <div className="two-col">
-        <Panel title={kam ? "My pipeline" : "Priority work queue"} link="View all" onLink={() => go(kam ? "opportunities" : "ist-pool")}>
+        <Panel title={kam ? "My pipeline" : regional ? "Regional pipeline" : "Priority work queue"} link="View all" onLink={() => go(kam ? "opportunities" : regional ? "regional-pipeline" : "ist-pool")}>
           <Pipeline role={role} />
         </Panel>
-        <Panel title={kam ? "Upcoming next actions" : "SLA attention"}>
+        <Panel title={kam ? "Upcoming next actions" : regional ? "Management attention" : "SLA attention"}>
           <ul className="tasks">
             <li>
               <span className="dot red" />
@@ -2690,7 +2724,7 @@ function ISTPool({ setModal, go }: any) {
     <>
       <PageHead title="IST Pool" subtitle="Unified queue of unassigned Quote Requests" />
       <div className="sla-banner">
-        <strong>2-hour pickup SLA</strong>
+        <strong>30-minute pickup SLA</strong>
         <span>12 unassigned · 3 approaching SLA · 1 breached</span>
       </div>
       <Toolbar />
@@ -2700,7 +2734,7 @@ function ISTPool({ setModal, go }: any) {
             <tr>
               <th>Request</th>
               <th>Reseller / End User</th>
-              <th>Type</th>
+              <th>System suggestion</th>
               <th>Age</th>
               <th>Value</th>
               <th>Status</th>
@@ -2719,7 +2753,8 @@ function ISTPool({ setModal, go }: any) {
                   <small>{r.endUser}</small>
                 </td>
                 <td>
-                  <Badge text={r.type} tone={r.type === "Tender" ? "purple" : r.type === "Complex" ? "amber" : "blue"} />
+                  <Badge text={`${r.type} · unconfirmed`} tone={r.type === "Tender" ? "purple" : r.type === "Complex" ? "amber" : "blue"} />
+                  <small>{r.type === "Tender" ? "Tender reference/deadline trigger" : r.type === "Complex" ? "Multi-vendor/technical trigger" : "No complex or tender trigger"}</small>
                 </td>
                 <td className={r.status === "SLA breached" ? "danger-text" : ""}>{r.age}</td>
                 <td>{r.value}</td>
@@ -2773,7 +2808,7 @@ function AssignedList({ go }: { go: (s: Screen) => void }) {
               <td>
                 <Badge text="Standard" tone="blue" />
               </td>
-              <td>23:59 remaining</td>
+              <td>01:59 remaining</td>
               <td>
                 <Badge text="Ready" tone="green" />
               </td>
@@ -2788,6 +2823,19 @@ function AssignedList({ go }: { go: (s: Screen) => void }) {
 
 function RequestDetail({ go, confirmedType, setConfirmedType, classificationReason, setClassificationReason, classificationSaved, errors, confirmClassification }: any) {
   const changed = confirmedType !== "Standard";
+  const [tenderReference, setTenderReference] = useState("");
+  const [submissionDeadline, setSubmissionDeadline] = useState("");
+  const [targetDelivery, setTargetDelivery] = useState("");
+  const [classificationErrors, setClassificationErrors] = useState<string[]>([]);
+  function validateAndConfirm() {
+    const nextErrors: string[] = [];
+    if (changed && !classificationReason.trim()) nextErrors.push("Manual classification override reason is mandatory.");
+    if (confirmedType === "Complex" && !targetDelivery) nextErrors.push("Complex Quote target delivery date and time is mandatory.");
+    if (confirmedType === "Tender" && !tenderReference.trim()) nextErrors.push("Tender/RFP reference is mandatory.");
+    if (confirmedType === "Tender" && !submissionDeadline) nextErrors.push("Official submission deadline is mandatory.");
+    setClassificationErrors(nextErrors);
+    if (!nextErrors.length) confirmClassification();
+  }
   return (
     <>
       <div className="record-head">
@@ -2805,7 +2853,7 @@ function RequestDetail({ go, confirmedType, setConfirmedType, classificationReas
         </div>
         <div className="sla-clock">
           <small>QUOTE SLA</small>
-          <strong>23:47:18</strong>
+          <strong>01:47:18</strong>
           <span>Within SLA</span>
         </div>
       </div>
@@ -2820,7 +2868,7 @@ function RequestDetail({ go, confirmedType, setConfirmedType, classificationReas
         <button>Clarifications</button>
         <button>History</button>
       </div>
-      <FormErrors errors={errors} />
+      <FormErrors errors={[...errors, ...classificationErrors]} />
       <div className="classification-card">
         <div className="classification-head">
           <div>
@@ -2831,7 +2879,7 @@ function RequestDetail({ go, confirmedType, setConfirmedType, classificationReas
           {classificationSaved && <Badge text="Confirmed" tone="green" />}
         </div>
         <div className="classification-grid">
-          <Info label="Suggested Type" value="Standard · Suggested by KAM" />
+          <Info label="System-suggested Type" value="Standard · No Complex or Tender trigger detected" />
           <Field label="Confirmed Type *">
             <select value={confirmedType} onChange={(e) => setConfirmedType(e.target.value)}>
               <option>Standard</option>
@@ -2863,19 +2911,28 @@ function RequestDetail({ go, confirmedType, setConfirmedType, classificationReas
             <textarea value={classificationReason} onChange={(e) => setClassificationReason(e.target.value)} placeholder={confirmedType === "Complex" ? "Describe the technical, vendor or cross-team complexity." : "Record tender reference, official deadline and required submission format."} />
           </Field>
         )}
+        {confirmedType === "Complex" && (
+          <div className="form-grid">
+            <Field label="Justified target delivery *">
+              <input type="datetime-local" value={targetDelivery} onChange={(e) => setTargetDelivery(e.target.value)} />
+            </Field>
+            <Info label="SLA rule" value="Qualify within 2 business hours; track the justified delivery target" />
+          </div>
+        )}
         {confirmedType === "Tender" && (
           <div className="form-grid">
             <Field label="Tender reference *">
-              <input placeholder="Example: RFP-CI-2026-109" />
+              <input value={tenderReference} onChange={(e) => setTenderReference(e.target.value)} placeholder="Example: RFP-CI-2026-109" />
             </Field>
             <Field label="Official submission deadline *">
-              <input type="datetime-local" />
+              <input type="datetime-local" value={submissionDeadline} onChange={(e) => setSubmissionDeadline(e.target.value)} />
             </Field>
+            <Info label="SLA rule" value="Confirm ownership and response plan; track the formal submission deadline" />
           </div>
         )}
         <div className="classification-actions">
           <small>Any change records the previous value, new value, IST user, reason and timestamp.</small>
-          <button className="primary" onClick={confirmClassification}>
+          <button className="primary" onClick={validateAndConfirm}>
             {classificationSaved ? "Update classification" : "Confirm classification"}
           </button>
         </div>
@@ -3251,7 +3308,7 @@ function Pipeline({ role }: { role: Role }) {
   );
 }
 function isActive(item: string, screen: Screen) {
-  return (item === "Dashboard" && screen === "dashboard") || (["My Resellers", "My Strategic Resellers"].includes(item) && ["resellers", "reseller-detail"].includes(screen)) || (item === "Opportunities" && ["opportunities", "create-opportunity", "opportunity-detail"].includes(screen)) || (item === "Quote Requests" && ["kam-requests", "kam-request-detail", "request-start", "create-request", "request-success"].includes(screen)) || (item === "Quotations" && ["kam-quotations", "kam-quotation-detail", "revision-request", "revision-success"].includes(screen)) || (item === "Orders" && ["kam-orders", "kam-order-detail"].includes(screen)) || (item === "Activities" && ["activities", "create-activity"].includes(screen)) || (item === "Reports" && screen === "reports") || (item === "IST Pool" && screen === "ist-pool") || (item === "My Assigned Requests" && ["assigned", "request-detail", "quotation", "published"].includes(screen));
+  return (item === "Dashboard" && screen === "dashboard") || (["My Resellers", "My Strategic Resellers"].includes(item) && ["resellers", "reseller-detail"].includes(screen)) || (item === "Opportunities" && ["opportunities", "create-opportunity", "opportunity-detail"].includes(screen)) || (item === "Quote Requests" && ["kam-requests", "kam-request-detail", "request-start", "create-request", "request-success"].includes(screen)) || (item === "Quotations" && ["kam-quotations", "kam-quotation-detail", "revision-request", "revision-success"].includes(screen)) || (item === "Orders" && ["kam-orders", "kam-order-detail"].includes(screen)) || (item === "Activities" && ["activities", "create-activity"].includes(screen)) || (item === "Reports" && screen === "reports") || (item === "IST Pool" && screen === "ist-pool") || (item === "My Assigned Requests" && ["assigned", "request-detail", "quotation", "published"].includes(screen)) || (item === "Team Workload" && screen === "team-workload") || (item === "SLA Escalations" && screen === "sla-escalations") || (item === "Regional Pipeline" && screen === "regional-pipeline");
 }
 function KAMOrderList({ go }: { go: (s: Screen) => void }) {
   return (
@@ -3589,16 +3646,96 @@ function KAMNotifications({ go }: { go: (s: Screen) => void }) {
 function navigate(item: string, role: Role, go: (s: Screen) => void) {
   if (item === "Dashboard") go("dashboard");
   else if (item === "My Resellers" || item === "My Strategic Resellers") go("resellers");
-  else if (item === "Opportunities") go("opportunities");
+  else if (item === "Opportunities" && role === "KAM") go("opportunities");
+  else if (item === "Opportunities" && role === "Regional Manager") go("regional-pipeline");
   else if (item === "Quotations" && role === "KAM") go("kam-quotations");
+  else if (item === "Quotations" && role === "IST") go("assigned");
+  else if (item === "Quotations" && role === "Desk Manager") go("team-workload");
+  else if (item === "Quotations" && role === "Regional Manager") go("regional-pipeline");
   else if (item === "Orders" && role === "KAM") go("kam-orders");
+  else if (item === "Orders" && role === "Regional Manager") go("regional-pipeline");
   else if (item === "Activities") go("activities");
   else if (item === "Reports" && role === "KAM") go("reports");
+  else if (item === "Reports" && role === "Regional Manager") go("regional-pipeline");
+  else if (item === "Reports" && role === "Desk Manager") go("sla-escalations");
   else if (item === "Notifications" && role === "KAM") go("notifications");
   else if (item === "IST Pool") go("ist-pool");
   else if (item === "My Assigned Requests") go("assigned");
   else if (item === "Quote Requests") go("kam-requests");
+  else if (item === "Team Workload") go("team-workload");
+  else if (item === "SLA Escalations") go("sla-escalations");
+  else if (item === "Regional Pipeline") go("regional-pipeline");
   else go("dashboard");
+}
+
+function DeskTeamWorkload({ notify }: { notify: (message: string) => void }) {
+  const [assignee, setAssignee] = useState("Samuel Ibrahim");
+  const members = ["Samuel Ibrahim", "Awa Traoré", "Yamin Shaikh", "Fatou Diop", "Jean Kouassi"];
+  return (
+    <>
+      <PageHead title="IST Team Workload" subtitle="Central desk supervision — workflow ownership only, not commercial ownership" />
+      <div className="assignment-banner">
+        <strong>Desk Manager rule</strong>
+        <span>The Desk Manager monitors flow and may reassign operational ownership. The assigned KAM remains the account and revenue owner.</span>
+      </div>
+      <div className="metrics small">
+        <Metric label="IST Members" value="5" hint="Central team" />
+        <Metric label="Open Requests" value="31" hint="Across the desk" />
+        <Metric label="At Risk" value="4" hint="Action required" />
+      </div>
+      <div className="table-card">
+        <table>
+          <thead><tr><th>Request</th><th>Classification</th><th>Current IST</th><th>SLA</th><th>Reassign to</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>QR-2026-01839</strong><small>TechBridge Ghana · Outlook</small></td>
+              <td><Badge text="Tender / Project" tone="purple" /></td>
+              <td>Awa Traoré</td>
+              <td><Badge text="Breached" tone="red" /><small>Response plan overdue</small></td>
+              <td><select value={assignee} onChange={(e) => setAssignee(e.target.value)}>{members.map((member) => <option key={member}>{member}</option>)}</select></td>
+              <td><button className="small-primary" onClick={() => notify(`QR-2026-01839 reassigned to ${assignee}; audit event recorded`)}>Reassign</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function DeskSLAEscalations({ notify }: { notify: (message: string) => void }) {
+  return (
+    <>
+      <PageHead title="SLA Escalations" subtitle="Requests that need operational intervention" />
+      <div className="table-card">
+        <table>
+          <thead><tr><th>Request</th><th>Source</th><th>Classification</th><th>SLA event</th><th>Operational owner</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>QR-2026-01839</td><td>Outlook</td><td>Tender / Project</td><td><Badge text="Response plan overdue" tone="red" /></td><td>Awa Traoré</td><td><button className="small-primary" onClick={() => notify("Escalation acknowledged; audit event recorded")}>Acknowledge</button></td></tr>
+            <tr><td>QR-2026-01841</td><td>AITEKCenter</td><td>Complex</td><td><Badge text="Qualification at risk" tone="amber" /></td><td>Yamin Shaikh</td><td><button className="secondary" onClick={() => notify("Reminder sent to assigned IST member")}>Send reminder</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function RegionalPipeline() {
+  return (
+    <>
+      <PageHead title="Regional Pipeline" subtitle="West Africa — read-only commercial supervision across assigned KAMs" />
+      <div className="assignment-banner"><strong>Regional access</strong><span>Data is limited to the Regional Manager’s region. Regional Managers monitor and coach; they do not replace KAM ownership.</span></div>
+      <div className="metrics"><Metric label="Pipeline" value="€4.86M" hint="64 active Opportunities" /><Metric label="Weighted Pipeline" value="€2.31M" hint="Stage probability applied" /><Metric label="Won YTD" value="€1.74M" hint="Across 5 KAMs" /><Metric label="At Risk" value="€620K" hint="9 Opportunities" /></div>
+      <div className="table-card">
+        <table>
+          <thead><tr><th>KAM</th><th>Strategic Resellers</th><th>Active Opportunities</th><th>Pipeline</th><th>Next Actions Overdue</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td>Aminata Koné</td><td>12</td><td>18</td><td>€1.42M</td><td>2</td><td><Badge text="Attention" tone="amber" /></td></tr>
+            <tr><td>Jean Kouassi</td><td>10</td><td>15</td><td>€1.18M</td><td>0</td><td><Badge text="On track" tone="green" /></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
 }
 
 function ResellerList({ go }: { go: (s: Screen) => void }) {
