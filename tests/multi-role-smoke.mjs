@@ -36,6 +36,11 @@ async function waitFor(expression, message) {
 async function loadLogin() {
   await command("Page.navigate", { url: baseUrl });
   await waitFor(`document.body.innerText.includes("Sign in")`, "Login did not load");
+  await waitFor(`(() => {
+    const page=document.querySelector(".login-page");
+    const card=document.querySelector(".login-card");
+    return page && card && getComputedStyle(page).display==="grid" && parseFloat(getComputedStyle(card).padding)>=20;
+  })()`, "Login stylesheet did not load or layout is unstyled");
   await new Promise((resolve) => setTimeout(resolve, 350));
 }
 async function loginAs(role) {
@@ -61,7 +66,7 @@ await waitFor(`document.body.innerText.includes("Only resellers assigned to the 
 
 await loginAs("IST");
 await nav("IST Pool");
-await waitFor(`document.body.innerText.includes("30-minute pickup SLA") && document.body.innerText.includes("System suggestion")`, "IST Pool SLA/classification display is incorrect");
+await waitFor(`document.body.innerText.includes("30-minute pickup SLA") && document.body.innerText.toLowerCase().includes("system suggestion")`, "IST Pool SLA/classification display is incorrect");
 await evaluate(`[...document.querySelectorAll("button")].find(b=>b.textContent.trim()==="Pick up").click()`);
 await waitFor(`document.body.innerText.includes("The applicable execution SLA starts after classification")`, "Pickup SLA explanation is incorrect");
 
