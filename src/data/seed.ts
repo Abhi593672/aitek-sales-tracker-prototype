@@ -40,13 +40,13 @@ export const seedQuotes:QuoteRequest[] = [
   {id:"QR-2026-00843",opportunityId:"OPP-2026-0152",resellerId:"RES-00241",products:"HP ProBook laptops",quantity:25,status:"In IST Pool",source:"AITEKCenter",receivedAt:"2026-08-18T09:24:00",pickupSlaMinutes:26,version:0},
 ];
 
-export const stages=["Identified","Qualification","Quote Requested","Quote In Progress","Quote Sent","Customer Review","Negotiation","PO Expected","Won Pending Invoice","Invoiced","Recovered / Paid","Lost","Dormant","Disqualified"];
-export const stageProbability:Record<string,number>={"Identified":10,"Qualification":25,"Quote Requested":40,"Quote In Progress":50,"Quote Sent":60,"Customer Review":70,"Negotiation":75,"PO Expected":90,"Won Pending Invoice":100,"Invoiced":100,"Recovered / Paid":100,"Lost":0,"Dormant":0,"Disqualified":0};
+export const stages=["Lead Identified","Qualification","Quote Sent","Negotiation","Customer Decision","Won","Lost","Dormant","Disqualified"];
+export const stageProbability:Record<string,number>={"Lead Identified":10,"Identified":10,"Qualification":25,"Quote Requested":40,"Quote In Progress":50,"Quote Sent":60,"Customer Review":70,"Negotiation":75,"Customer Decision":90,"PO Expected":90,"Won":100,"Won Pending Invoice":100,"Invoiced":100,"Recovered / Paid":100,"Lost":0,"Dormant":0,"Disqualified":0};
 export const leadSources=["Cross-sell","Inbound","New","Renewal","Tender","Upsell","Vendor lead"];
 export const businessUnits=["HP","Cyber","Device & Print","Energy","Infra & Cloud"];
 export const vendors=["Acronis","Altair","Allot","APC","Arista","Afristorm","Asus","BeyondTrust","Canon","D-Link","Epson","Exabeam","Gatewatcher","HP","HYCU","Infoblox","Kaspersky","Lenovo","Lenovo ISG","Microsoft","Nitram","Nutanix","PRTG","Qualys","Symantec","Transcend","Tufin","Ubika","Varonis","Veritas","Wallix","Whalebone"];
 export const currencies=["EUR","AED","MAD","USD","XOF"];
-export const opportunityTypes=["Renewal licences","Renewal support","Upsell existing customer","Cross-sell solution","New project — existing customer","New","Infrastructure upgrade","Capacity extension","Cybersecurity project","Datacenter project","Cloud / virtualisation project","Network project","Energy / UPS project"];
+export const opportunityTypes=["Renewal licences","Renewal support","Upsell client existant","Cross-sell solution","Nouveau projet client existant","New","Upgrade infrastructure","Extension capacité","Projet cybersécurité","Projet datacenter","Projet cloud / virtualisation","Projet réseau","Projet énergie / UPS"];
 export const nextActions=["Customer qualification","Technical-need qualification","Budget / timing qualification","Customer call","Customer follow-up","Customer meeting","Solution demo / presentation","Prepare proposal","Internal pricing validation","Technical / architecture validation","Vendor validation","Send quotation","Revise quotation","Commercial negotiation","Await customer decision","Follow up customer decision","Administrative closing","Prepare order","Prepare deployment","Upsell / opportunity extension"];
 export const riskLevels=["Not assessed","Low","Medium","High","Critical"];
 export const riskTypes=["Commercial","Financial","Logistics"];
