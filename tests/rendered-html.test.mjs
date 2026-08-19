@@ -26,3 +26,20 @@ test("includes Desk Manager reassignment and Regional Manager supervision", () =
   assert.match(page, /Regional pipeline, KAM performance and commercial risk/);
   assert.match(page, /read-only commercial supervision/);
 });
+
+test("preserves the AITEKCenter quotation workspace with scoped Sales Tracker enhancements", () => {
+  for (const text of [
+    "AITEK Price (Converted)",
+    "Vendor Price",
+    "Discount %",
+    "Stock availability",
+    "Delivery conditions",
+    "Price Break-up from AITEK",
+    "FAP Simulator",
+    "Validate &amp; Send to Reseller",
+    "SALES TRACKER CONTEXT",
+  ]) {
+    assert.ok(page.includes(text), `Expected quotation workspace to include: ${text}`);
+  }
+  assert.doesNotMatch(page, /label="Sale Representative"/);
+});

@@ -259,7 +259,7 @@ export default function Prototype() {
               }}
             />
           )}
-          {screen === "quotation" && <Quotation product={product} setProduct={setProduct} quantity={quantity} setQuantity={setQuantity} unitPrice={unitPrice} setUnitPrice={setUnitPrice} errors={errors} publish={publishQuote} />}
+          {screen === "quotation" && <Quotation product={product} setProduct={setProduct} quantity={quantity} setQuantity={setQuantity} unitPrice={unitPrice} setUnitPrice={setUnitPrice} errors={errors} publish={publishQuote} notify={notify} />}
           {screen === "published" && <Published go={go} />}
           {screen === "team-workload" && <DeskTeamWorkload notify={notify} />}
           {screen === "sla-escalations" && <DeskSLAEscalations notify={notify} />}
@@ -3005,114 +3005,128 @@ function RequestDetail({ go, confirmedType, setConfirmedType, classificationReas
   );
 }
 
-function Quotation({ product, setProduct, quantity, setQuantity, unitPrice, setUnitPrice, errors, publish }: any) {
-  const total = Number(quantity || 0) * Number(unitPrice || 0);
+function Quotation({ product, setProduct, quantity, setQuantity, unitPrice, setUnitPrice, errors, publish, notify }: any) {
+  const [discountPercent, setDiscountPercent] = useState("10");
+  const [tva, setTva] = useState(true);
+  const [airsi, setAirsi] = useState(true);
+  const basePrice = Number(unitPrice || 0);
+  const discount = basePrice * (Number(discountPercent || 0) / 100);
+  const convertedPrice = Math.max(0, basePrice - discount);
+  const lineOneTotal = Number(quantity || 0) * convertedPrice;
+  const lineTwoTotal = 10 * 28215;
+  const subtotal = lineOneTotal + lineTwoTotal;
+  const tvaAmount = tva ? subtotal * 0.18 : 0;
+  const airsiAmount = airsi ? subtotal * 0.059 : 0;
+  const total = subtotal + tvaAmount + airsiAmount;
   return (
     <>
-      <PageHead title="Prepare Quotation" subtitle="QT-2026-00871 · From QR-2026-01842" />
+      <PageHead title="Prepare Quotation" subtitle="Reuse of the AITEKCenter quotation workspace · enhanced with Sales Tracker context" />
       <FormErrors errors={errors} />
-      <div className="quote-layout">
-        <div className="form-card">
-          <div className="quote-meta">
-            <Info label="Reseller" value="Nexa Systems CI" />
-            <Info label="End User" value="Orange Côte d’Ivoire" />
-            <Info label="Currency" value="EUR" />
-            <Info label="Validity" value="30 days" />
+      <section className="quotation-context">
+        <div className="quotation-context-head">
+          <div>
+            <span className="eyebrow">SALES TRACKER CONTEXT</span>
+            <h2>QR-2026-01842 · Nexa Systems CI</h2>
+            <p>Linked to OPP-2026-00417 · Cloud &amp; Endpoint Renewal</p>
           </div>
-          <SectionTitle n="1" title="Quotation lines" />
-          <table className="edit-table">
-            <thead>
-              <tr>
-                <th>Product / SKU</th>
-                <th>Qty</th>
-                <th>Unit cost</th>
-                <th>Margin</th>
-                <th>Unit selling price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <select value={product} onChange={(e) => setProduct(e.target.value)}>
-                    <option>HP ProBook 450 G10</option>
-                    <option value="">Select product</option>
-                  </select>
-                  <small>HP-9G2X5EA</small>
-                </td>
-                <td>
-                  <input value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-                </td>
-                <td>€840.00</td>
-                <td>
-                  <Badge text="15.7%" tone="green" />
-                </td>
-                <td>
-                  <input value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} />
-                </td>
-                <td>
-                  <strong>€{total.toLocaleString()}</strong>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <button className="secondary addline">+ Add quotation line</button>
-          <SectionTitle n="2" title="Commercial terms" />
-          <div className="form-grid">
-            <Field label="Payment terms *">
-              <select>
-                <option>100% prepayment / bank transfer</option>
-                <option>Approved credit terms</option>
-              </select>
-            </Field>
-            <Field label="Delivery lead time *">
-              <input defaultValue="4–6 weeks, subject to stock availability" />
-            </Field>
-            <Field label="Quotation validity *">
-              <select>
-                <option>30 days</option>
-                <option>15 days</option>
-              </select>
-            </Field>
-            <Field label="Incoterm">
-              <select>
-                <option>Delivered Abidjan</option>
-                <option>EXW</option>
-              </select>
-            </Field>
-          </div>
-          <Field label="Terms and notes">
-            <textarea defaultValue="Prices exclude local taxes unless stated. Delivery timing is subject to final stock confirmation at Order stage." />
-          </Field>
-          <div className="form-actions">
-            <button className="secondary">Save draft</button>
-            <button className="secondary">Preview PDF</button>
-            <button className="primary" onClick={publish}>
-              Validate & Publish
-            </button>
+          <div className="quotation-context-badges">
+            <Badge text="Standard Quote" tone="blue" />
+            <Badge text="SLA · 01:26 remaining" tone="green" />
           </div>
         </div>
-        <aside className="quote-summary">
-          <h3>Quotation summary</h3>
+        <div className="quotation-context-grid">
+          <Info label="Source" value="KAM" />
+          <Info label="Assigned IST" value="Samuel Ibrahim" />
+          <Info label="Assigned KAM" value="Aminata Koné" />
+          <Info label="Entity / Region" value="AITEK Côte d’Ivoire · West Africa" />
+          <Info label="Reseller link" value="Active · Linked" />
+          <Info label="Classification trigger" value="Single vendor · Standard products" />
+        </div>
+      </section>
+
+      <div className="quotation-tabs">
+        <button className="active">Quote 1</button>
+        <button onClick={() => notify("FAP Simulator opened with current quotation values")}>FAP Simulator</button>
+      </div>
+
+      <section className="aitek-quotation-card">
+        <div className="aitek-quotation-head">
           <div>
-            <span>Subtotal</span>
-            <strong>€{total.toLocaleString()}</strong>
+            <h2>Quotation lines</h2>
+            <p>Existing AITEKCenter pricing and calculation rules are reused.</p>
           </div>
-          <div>
-            <span>Discount</span>
-            <strong>€0</strong>
+          <div className="tax-options">
+            <label><input type="checkbox" checked={tva} onChange={(e) => setTva(e.target.checked)} /> TVA</label>
+            <label><input type="checkbox" checked={airsi} onChange={(e) => setAirsi(e.target.checked)} /> AIRSI</label>
           </div>
-          <div className="grand">
-            <span>Net total</span>
-            <strong>€{total.toLocaleString()}</strong>
+        </div>
+
+        <div className="quotation-product-block">
+          <div className="quotation-product-grid top-row">
+            <Field label="Vendor"><input value="HP" readOnly /></Field>
+            <Field label="Product *">
+              <select value={product} onChange={(e) => setProduct(e.target.value)}>
+                <option>HP ProBook 450 G10</option>
+                <option>HP EliteBook 640 G10</option>
+                <option value="">Select product</option>
+              </select>
+            </Field>
+            <Field label="Stock availability"><input value="75" readOnly /></Field>
           </div>
-          <small>No human approval is required. Publishing occurs after mandatory system validations pass.</small>
-          <hr />
-          <Check text="Pricing complete" />
-          <Check text="Margin calculated" />
-          <Check text="Commercial terms complete" />
-          <Check text="Reseller active and linked" />
-        </aside>
+          <div className="quotation-product-grid">
+            <Field label="Quantity *"><input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} /></Field>
+            <Field label="AITEK Price *"><input type="number" min="0" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} /></Field>
+            <Field label="Vendor Price"><input value="840" readOnly /></Field>
+            <Field label="AITEK Price (Converted) *"><input value={convertedPrice.toFixed(2)} readOnly /></Field>
+            <Field label="Discount"><input value={discount.toFixed(2)} readOnly /></Field>
+            <Field label="Discount %"><input type="number" min="0" max="100" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} /></Field>
+            <Field label="Subtotal (Converted)"><input value={lineOneTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} readOnly /></Field>
+          </div>
+          <button className="remove-line" aria-label="Remove product line">×</button>
+        </div>
+
+        <div className="quotation-product-block">
+          <div className="quotation-product-grid top-row">
+            <Field label="Vendor"><input value="Canon" readOnly /></Field>
+            <Field label="Product"><input value="Toner CANON C-EXV40 · 3480B006AA" readOnly /></Field>
+            <Field label="Stock availability"><input value="15" readOnly /></Field>
+          </div>
+          <div className="quotation-product-grid">
+            <Field label="Quantity"><input value="10" readOnly /></Field>
+            <Field label="AITEK Price"><input value="29,700" readOnly /></Field>
+            <Field label="Vendor Price"><input value="17,245.48" readOnly /></Field>
+            <Field label="AITEK Price (Converted)"><input value="28,215" readOnly /></Field>
+            <Field label="Discount"><input value="1,485" readOnly /></Field>
+            <Field label="Discount %"><input value="5" readOnly /></Field>
+            <Field label="Subtotal (Converted)"><input value={lineTwoTotal.toLocaleString()} readOnly /></Field>
+          </div>
+          <button className="remove-line" aria-label="Remove product line">×</button>
+        </div>
+
+        <div className="quotation-line-actions">
+          <button className="secondary" onClick={() => notify("Product line added")}>+ Add Product</button>
+        </div>
+
+        <Field label="Delivery conditions *">
+          <textarea defaultValue="Delivery subject to final stock confirmation. Lead time: 4–6 weeks after confirmed Order." />
+        </Field>
+        <Field label="Internal quotation note">
+          <textarea defaultValue="Standard renewal request. Pricing prepared using the existing AITEKCenter quotation calculations." />
+        </Field>
+      </section>
+
+      <section className="aitek-price-breakdown">
+        <h2>Price Break-up from AITEK</h2>
+        <div><span>Subtotal (Converted)</span><strong>₣ {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></div>
+        <div><span>TVA</span><strong>₣ {tvaAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></div>
+        <div><span>AIRSI</span><strong>₣ {airsiAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></div>
+        <div className="grand"><span>Total converted price</span><strong>₣ {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></div>
+      </section>
+
+      <div className="quotation-footer-actions">
+        <button className="secondary" onClick={() => notify("Quotation draft saved. Nothing was sent to the reseller.")}>Save Draft</button>
+        <button className="secondary" onClick={() => notify("Quotation preview generated")}>Preview Quotation</button>
+        <button className="primary" onClick={publish}>Validate &amp; Send to Reseller</button>
       </div>
     </>
   );
